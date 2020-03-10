@@ -1504,6 +1504,206 @@ Content-Length: 56
 
 ####  
 
+## 2.2.6 PathList
+
+#### 1 获取logo灯路径规划列表
+
+**参数**
+
+| 名字 | 属性   | 必填 | 描述         |
+| ---- | ------ | ---- | ------------ |
+| sn   | String | Y    | 投影灯的sn号 |
+
+##### Curl 请求
+
+```bash
+$ curl -X POST \
+  http://localhost/rest/v1/playlist/ \
+  -H 'Authorization: TOKEN 2af29cbd-a7a3-4e87-8cc4-55a91a8a9506' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'cache-control: no-cache' \
+  -d 'sn=xxx67890&undefined='
+```
+
+##### Http 响应
+
+```json
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Content-Length: 56
+
+{
+    "code": 0,
+    "message": "OK",
+    "content": {
+        "uuid": "e3df287a-43c9-48c2-b2f7-bd270fa653c1",
+        "createDate": "2020-03-05T01:34:39.000+0000",
+        "modifyDate": "2020-03-05T01:34:39.000+0000",
+        "pathNames": [
+            "ac",
+            "bc"
+        ],
+        "projectorSn": "1c00141c5881076258b"
+    }
+}
+```
+
+#### 2 删除logo灯路径请求
+
+服务器会给logo灯推送请求,等到logo灯返回后才修改数据库
+
+**参数**
+
+| 名字     | 属性   | 必填 | 描述                             |
+| -------- | ------ | ---- | -------------------------------- |
+| sn       | String | Y    | 投影灯的sn号                     |
+| action   | Enum   | Y    | 枚举播放列表操作，[save, delete] |
+| pathList | Array  | Y    | 路径名称数组                     |
+
+##### Curl 请求
+
+```bash
+$ curl -X POST \
+  http://localhost/rest/v1/pathlist/update \
+  -H 'Authorization: KEY iview123456' \
+  -H 'Content-Type: application/json' \
+  -H 'cache-control: no-cache' \
+  -d '{
+	  	"sn":"1c00141c5881076258b",
+	    "action":"delete",
+	    "pathNames":["ac", "bc"]
+   }'
+```
+
+##### Http 响应
+
+```json
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Content-Length: 56
+
+{
+    "code": 0,
+    "message": "OK",
+    "content": success
+}
+```
 
 
-#### 	
+
+#### 3  服务器给logo灯推送删除规划路径命令
+
+JPush 推送的消息格式
+
+```json
+{
+    "type":"Pathlist",
+    "action":"delete"
+    "arguments": {
+        "pathNames":["ac", "bc"]
+    }
+}
+```
+
+#### 4.  logo灯的pathlist回调-Callback
+
+服务器会在回调的结果= success后才真正把结果写入数据库
+
+**参数**
+
+| 名字      | 属性   | 必填 | 描述                                                   |
+| --------- | ------ | ---- | ------------------------------------------------------ |
+| sn        | String | Y    | 投影灯的sn号                                           |
+| msgId     | String | Y    | 上一个推送的msgId                                      |
+| action    | Enum   | Y    | 枚举播放列表操作，[delete]                             |
+| pathNames | Array  | Y    | logo灯所有的路径列表                                   |
+| result    | Enum   | Y    | Logo灯操作结果的枚举类，success,failed,partial_success |
+
+##### Curl 请求
+
+```bash
+$ curl 'http://localhost/rest/v1/pathist/update/callback' -i -X POST \
+    -H 'Content-Type: application/json;charset=UTF-8' \
+    -H 'Authorization: KEY iview123456' \
+     -d '{
+			"sn":"xxx67890",
+			"msgId":"1905162488",
+			"action":"delete"
+			"pathNames":["ac", "bc"]
+			"result":"failed"
+}'
+```
+
+##### Http 响应
+
+```json
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Content-Length: 56
+
+{
+    "code": 0,
+    "message": "OK",
+    "content": success
+}
+```
+
+#### 
+
+
+
+#### 3  logo灯保存路径规划请求
+
+**参数**
+
+| 名字     | 属性   | 必填 | 描述                             |
+| -------- | ------ | ---- | -------------------------------- |
+| sn       | String | Y    | 投影灯的sn号                     |
+| action   | Enum   | Y    | 枚举播放列表操作，[save, delete] |
+| pathList | Array  | Y    | 路径名称数组                     |
+
+##### Curl 请求
+
+```bash
+$ curl -X POST \
+  http://localhost/rest/v1/pathlist/device/update \
+  -H 'Authorization: KEY iview123456' \
+  -H 'Content-Type: application/json' \
+  -H 'cache-control: no-cache' \
+  -d '{
+	  	"sn":"1c00141c5881076258b",
+	    "action":"save",
+	    "pathNames":["ac", "bc"]
+   }'
+```
+
+##### Http 响应
+
+```json
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+Content-Length: 56
+
+{
+    "code": 0,
+    "message": "OK",
+    "content": success
+}
+```
+
+
+
+##### 处理完消息后推送给手机
+
+```json
+{
+    "type":"Pathlist",
+    "action":"save"
+    "arguments": {
+        "pathNames":["ac", "bc"]
+    }
+}
+```
+
+
+
